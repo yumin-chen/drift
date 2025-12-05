@@ -1,0 +1,21 @@
+# Drift Architecture
+
+direction: right
+
+cli: CLI -> drift-core
+wasm: WASM -> drift-core
+
+drift-core: {
+  subsystem: {
+    preprocessor: Mermaid -> d2-ast
+    renderer: d2-ast -> SVG
+  }
+}
+
+subsystem.renderer -> layout-engine
+
+layout-engine: {
+  dagre: DAGRE
+  tala: TALA
+  elk: ELK
+}
