@@ -1,0 +1,57 @@
+# Drift Architecture
+
+direction: right
+
+CLI: {
+  shape: person
+  label: "CLI User"
+}
+
+Browser: {
+  shape: person
+  label: "Browser User"
+}
+
+drift_cli: {
+  label: "cmd/drift"
+  shape: rectangle
+}
+
+drift_wasm: {
+  label: "wasm/drift_wasm.go"
+  shape: rectangle
+}
+
+Preprocessor: {
+  label: "pkg/preprocessor"
+  shape: class
+}
+
+Renderer: {
+  label: "pkg/renderer"
+  shape: class
+}
+
+D2Core: {
+  label: "third_party/d2"
+  shape: package
+}
+
+SVG: {
+  shape: document
+  label: "Output.svg"
+}
+
+CLI -> drift_cli: "Executes"
+Browser -> drift_wasm: "Calls"
+
+drift_cli -> Preprocessor: "Uses"
+drift_cli -> Renderer: "Uses"
+
+drift_wasm -> Preprocessor: "Uses"
+drift_wasm -> Renderer: "Uses"
+
+Preprocessor -> D2Core: "Generates D2 AST"
+Renderer -> D2Core: "Renders AST"
+
+D2Core -> SVG: "Produces"
