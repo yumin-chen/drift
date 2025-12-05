@@ -1,0 +1,54 @@
+direction: right
+
+# High-Level System Overview
+Input_Layer: "Input Layer" {
+  shape: cloud
+  style.fill: "#f0f0f0"
+
+  d2_source: ".d2"
+  mermaid_source: "Mermaid"
+  future_dsls: "Future DSLs"
+}
+
+Preprocessor_Layer: "Preprocessor Layer" {
+  shape: hexagon
+  style.fill: "#e0e0ff"
+
+  mermaid_pre: "Mermaid Preprocessor"
+  future_pre: "Future Preprocessors"
+}
+
+Intermediate_Diagram_Model: "Intermediate Diagram Model" {
+  shape: cylinder
+  style.fill: "#e0ffe0"
+}
+
+Model_Mapper: "Model Mapper" {
+  shape: hexagon
+  style.fill: "#e0e0ff"
+
+  d2_ast_map: "-> D2 AST"
+  ext_render_map: "-> Extended Renderer"
+}
+
+Renderer_Layer: "Renderer Layer" {
+  shape: cloud
+  style.fill: "#f0f0f0"
+
+  layout_engines: "Layout Engines" {
+    elk: "ELK"
+    tala: "TALA"
+    dagre: "DAGRE"
+  }
+}
+
+Output_Layer: "Output Layer" {
+  shape: cloud
+  style.fill: "#f0f0f0"
+
+  svg_out: "SVG"
+  png_out: "PNG"
+  interactive_out: "Interactive HTML"
+}
+
+Input_Layer -> Preprocessor_Layer -> Intermediate_Diagram_Model -> Model_Mapper -> Renderer_Layer -> Output_Layer
