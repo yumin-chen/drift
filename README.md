@@ -1,71 +1,111 @@
-# Drift — Deterministic Renderer With Dynamic Data Inputs
+# Drift
 
-Drift is fundamentally a deterministic diagram rendering engine. Its primary responsibility is:
+**Tagline:** Deterministic, Air-Gap-Ready Diagrams-as-Code
 
-`Input → Normalize → Generate D2 → Layout (deterministic) → SVG/PNG/PDF`
+Drift is a powerful, self-contained engine that transforms D2 and Mermaid definitions into beautiful, consistent SVG diagrams. It is designed for security-conscious, air-gapped environments and supports both static file rendering and dynamic data inputs.
 
-However, Drift does not fetch dynamic data. **It consumes dynamic data.** Dynamic data comes from MotionPlatform’s upstream modules (e.g., MotionGraph, MotionPatch, MotionFetch, MotionPolicy).
+---
 
-**NOTE:** Due to limitations in the current environment, the D2 dependency has not been vendored. To make this project fully air-gap ready, you will need to manually vendor the D2 source code into the `third_party/d2` directory.
+## Key Features
 
-## Key Characteristics
+- **Deterministic Rendering:** Identical input (static file or dynamic AST) produces the exact same SVG every time.
+- **Air-Gap Ready:** All dependencies, including fonts and layout engines, are vendored. No network calls are made at build or run time.
+- **Mermaid Compatibility:** The preprocessor maps Mermaid Flowcharts, Class Diagrams, and ER Diagrams to a canonical D2 AST.
+- **Dynamic Data Layer:** Consumes generic dynamic inputs (JSON, API responses, etc.) that can be mapped to a D2 AST by the WASM/JS layer.
+- **Stateless Operation:** Drift only renders the AST it is given at any moment, without maintaining subscriptions, streams, or polling.
+- **CLI & WASM Support:** Use Drift as a standalone CLI for offline rendering or as a WASM module in any browser environment.
 
-*   **✔ Deterministic:** Same input graph → same D2 → same layout → identical output.
-*   **✔ Dynamic‑Data Compatible:** The graph fed into Drift can be updated in real time by other MotionPlatform modules.
-*   **✘ Not stateful:** Drift never maintains subscriptions, streams, or polling. It only renders the graph it is given at that moment, with full determinism.
+---
 
-## How Dynamic Rendering Works in MotionPlatform
+## Supported Diagram Types
 
-1.  **Upstream module updates a graph snapshot.**
-    *   Examples: A Git graph updates via `MotionFetch`, a dependency graph updates via `MotionGraph`, a dashboard updates via `MotionMetrics`, or a filtered graph updates via `MotionPolicy`.
-2.  **MotionPlatform passes the updated internal graph to Drift.**
-3.  **Drift converts that to canonical D2.**
-    *   This includes deterministic node/edge sorting, stable IDs, and stable styles.
-4.  **The WASM module produces a deterministic layout,** even if the graph is based on changing runtime data, was fetched from an external system, or is re-rendered frequently.
+### v0.1 (MVP)
 
-## Key Insight for Documentation
+| Mermaid Type / Diagram           | Status    | Notes / Mapping to D2                                           |
+| -------------------------------- | --------- | --------------------------------------------------------------- |
+| Flowcharts (graph TD/LR/BT/RL)   | ✅ MVP    | Fully deterministic, DAG layout                                 |
+| Class Diagrams                   | ✅ MVP    | Nodes = classes, edges = relationships, optional clusters for namespaces |
+| ER Diagrams                      | ✅ MVP    | Nodes = entities, edges = relationships with optional cardinality, clusters optional |
 
-> Drift is **deterministic in rendering, not static in data.**
+### Future Roadmap
 
-It is only “static” in the sense that it renders exactly what it is given. It becomes “dynamic” when the input graph is dynamically updated by other modules. This allows for dynamic dashboards without compromising determinism.
+| Mermaid Type / Diagram           | Status    | Notes                                                           |
+| -------------------------------- | --------- | --------------------------------------------------------------- |
+| State Diagrams                   | ❌ Future | Requires extensions for loops, nested states, and conditional transitions. |
+| Gantt / Timeline                 | ❌ Future | Requires timeline-aware metadata and sequencing.                |
+| Sequence Diagrams                | ❌ Future | Requires additional preprocessor and layout logic for sequential messages. |
+
+---
+
+## Usage
+
+### CLI
+
+Render a local diagram file:
+
+```bash
+drift render my-diagram.d2 --output my-diagram.svg
+drift render my-flowchart.mermaid --output my-flowchart.svg --engine ELK
+```
+
+### Browser (WASM)
+
+```javascript
+import drift from 'drift-wasm';
+
+const mermaidSyntax = `
+graph TD;
+    A-->B;
+    A-->C;
+    B-->D;
+    C-->D;
+`;
+
+const svgOutput = drift.render(mermaidSyntax);
+document.getElementById('diagram-container').innerHTML = svgOutput;
+```
+
+---
 
 ## Architecture
 
-Drift's architecture is designed for modularity. The core components include:
+Drift’s architecture is a self-contained pipeline: `Parser → Layout → Renderer → Output`.
 
--   **Preprocessor:** A normalizer that converts an internal MotionPlatform graph into a D2 Abstract Syntax Tree (AST).
--   **Renderer:** A module that takes a D2 AST, selects a layout engine, and generates an SVG.
--   **CLI:** A command-line interface for testing rendering from local files.
--   **WASM:** A WebAssembly module that exposes Drift's rendering capabilities to the browser for use in MotionPlatform.
+1.  **Preprocessor:** Converts Mermaid syntax (Flowchart, Class, ER) into a canonical D2 Abstract Syntax Tree (AST).
+2.  **Dynamic Data Layer (JS/WASM):** The JS/WASM layer is responsible for transforming dynamic data (from JSON, APIs, etc.) into a D2-compatible AST before passing it to the renderer.
+3.  **Renderer:** Takes a D2 AST, selects a layout engine (DAGRE, TALA, or ELK), and generates an SVG.
+4.  **Output:** The final SVG is delivered via the CLI (for files) or the WASM module (for browser rendering).
 
-![Drift Architecture](docs/architecture.svg)
+---
 
 ## Directory Structure
 
 ```
 drift/
+├── src/
+│   ├── cli/
+│   ├── wasm/
+│   ├── preprocessor/
+│   ├── renderer/
+│   └── assets/
+├── examples/
+├── third_party/   # vendored D2 source
+├── docs/
+├── tests/
 ├── LICENSE
-├── README.md
-├── go.mod
-├── go.sum
-├── third_party/d2/
-├── cmd/drift/main.go
-├── pkg/preprocessor/parser.go
-├── pkg/renderer/renderer.go
-├── wasm/drift_wasm.go
-├── wasm/build.sh
-└── docs/
-    ├── architecture.d2
-    └── architecture.svg
+└── README.md
 ```
 
-## Architecture Decision Records (ADRs)
+---
 
--   [ADR-0001: Air-Gap Readiness](./docs/0001-air-gap.md)
--   [ADR-0002: Dynamic Layout Engine Selection](./docs/0002-dynamic-layout-engine.md)
--   [ADR-0003: Mermaid Compatibility Strategy](./docs/0003-mermaid-compatibility.md) (Superseded)
--   [ADR-0004: Browser and WASM Support](./docs/0004-browser-wasm.md)
--   [ADR-0005: Timeline-Aware Diagrams (Future)](./docs/0005-timeline-awareness.md)
+## Roadmap
+
+- **v0.1 (MVP):** Flowchart, Class, and ER diagram support. Stable CLI and WASM rendering pipelines. Full air-gap compliance.
+- **v0.2:** Formalize the dynamic data integration layer with generic JSON/API source examples.
+- **v0.3+:** Implement preprocessor extensions for State, Gantt, and Sequence diagrams.
+- **v0.4+:** Investigate timeline-aware rendering and optional SVG interactivity.
+
+---
 
 ## Contributing
 

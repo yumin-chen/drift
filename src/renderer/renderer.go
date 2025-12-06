@@ -1,7 +1,7 @@
 package renderer
 
 import (
-	"drift/pkg/preprocessor"
+	"drift/src/preprocessor"
 )
 
 // TODO: Define the SVG type.

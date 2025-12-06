@@ -2,33 +2,38 @@
 
 direction: right
 
-CLI: {
+CLI_User: {
   shape: person
   label: "CLI User"
 }
 
-Browser: {
+Browser_User: {
   shape: person
   label: "Browser User"
 }
 
+Dynamic_Data: {
+  shape: stored_data
+  label: "Dynamic Data (JSON/API)"
+}
+
 drift_cli: {
-  label: "cmd/drift"
+  label: "src/cli"
   shape: rectangle
 }
 
 drift_wasm: {
-  label: "wasm/drift_wasm.go"
+  label: "src/wasm"
   shape: rectangle
 }
 
 Preprocessor: {
-  label: "pkg/preprocessor"
+  label: "src/preprocessor"
   shape: class
 }
 
 Renderer: {
-  label: "pkg/renderer"
+  label: "src/renderer"
   shape: class
 }
 
@@ -42,8 +47,9 @@ SVG: {
   label: "Output.svg"
 }
 
-CLI -> drift_cli: "Executes"
-Browser -> drift_wasm: "Calls"
+CLI_User -> drift_cli: "Executes"
+Browser_User -> drift_wasm: "Calls"
+Dynamic_Data -> drift_wasm: "Provides"
 
 drift_cli -> Preprocessor: "Uses"
 drift_cli -> Renderer: "Uses"

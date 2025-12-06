@@ -14,10 +14,11 @@ func render(this js.Value, args []js.Value) interface{} {
 	input := args[0].String()
 
 	// TODO: Implement the full rendering pipeline:
-	// 1. Deserialize the input string into a MotionGraph.
-	// 2. Normalize the MotionGraph to a D2 AST.
-	// 3. Render the D2 AST to SVG.
-	// 4. Return the SVG string.
+	// 1. Determine if the input is Mermaid syntax or a dynamic data structure (e.g., JSON).
+	// 2. If Mermaid, parse it to a D2 AST using the preprocessor.
+	// 3. If dynamic data, transform it into a D2 AST.
+	// 4. Render the D2 AST to SVG using the renderer.
+	// 5. Return the SVG string.
 
 	return "Hello from Go WASM!" + input
 }
